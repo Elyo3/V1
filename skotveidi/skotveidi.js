@@ -8,13 +8,12 @@ var gunBuffer;
 var birdBuffer;
 var shotBuffer;
 var vPosition;
-var birdSpeed = Math.random() - 1;
-
-let birdStig = "";
-let birdCounter = 0;
+var birdSpeed = Math.random();
 var shot = [];
 var birds = [];
 var birdNum = 5;
+let birdStig = "";
+let birdCounter = 0;
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
@@ -114,6 +113,32 @@ window.onload = function init() {
     }
 }
 
+// Teikna skot
+function drawBullets() {
+    for (let i = 0; i < shot.length; i++) {
+        let bullet = shot[i];
+        bullet.y += bullet.birdSpeed;
+
+        if (bullet.y > 1.0) {
+            shot.splice(i, 1);
+            i--;
+            continue;
+        }
+
+        var shotVertices = [
+            vec2(bullet.x - 0.005, bullet.y),
+            vec2(bullet.x - 0.005, bullet.y + 0.05),
+            vec2(bullet.x + 0.005, bullet.y + 0.05),
+            vec2(bullet.x + 0.005, bullet.y)
+        ];
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, shotBuffer);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(shotVertices));
+        gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    }
+}
+
 // Búa til fuglar með position og hraða
 function createBirds(count) {
     let newBirds = [];
@@ -125,6 +150,32 @@ function createBirds(count) {
         });
     }
     return newBirds;
+}
+
+// Teikna birds
+function drawBirds() {
+    for (let i = 0; i < birds.length; i++) {
+        let bird = birds[i];
+        bird.x += bird.birdSpeed;
+
+        if (bird.x > 1.1) bird.x = -1.1;
+        if (bird.x < -1.1) bird.x = 1.1;
+
+        var birdVertices = [
+            vec2(bird.x - 0.05, bird.y - 0.03),
+            vec2(bird.x - 0.05, bird.y + 0.03),
+            vec2(bird.x + 0.05, bird.y + 0.03),
+            vec2(bird.x + 0.05, bird.y - 0.03)
+        ];
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, birdBuffer);
+        gl.bufferSubData(gl.ARRAY_BUFFER, i * 8 * Float32Array.BYTES_PER_ELEMENT, flatten(birdVertices));
+    }
+
+    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
+    for (let i = 0; i < birds.length; i++) {
+        gl.drawArrays(gl.TRIANGLE_FAN, i * 4, 4);
+    }
 }
 
 // Collisions milli fugla og skot
@@ -189,58 +240,6 @@ function endGame() {
     button.addEventListener('click', () => {
         location.reload();
     });
-}
-
-// Teikna skot
-function drawBullets() {
-    for (let i = 0; i < shot.length; i++) {
-        let bullet = shot[i];
-        bullet.y += bullet.birdSpeed;
-
-        if (bullet.y > 1.0) {
-            shot.splice(i, 1);
-            i--;
-            continue;
-        }
-
-        var shotVertices = [
-            vec2(bullet.x - 0.005, bullet.y),
-            vec2(bullet.x - 0.005, bullet.y + 0.05),
-            vec2(bullet.x + 0.005, bullet.y + 0.05),
-            vec2(bullet.x + 0.005, bullet.y)
-        ];
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, shotBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(shotVertices));
-        gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
-        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
-    }
-}
-
-// Teikna birds
-function drawBirds() {
-    for (let i = 0; i < birds.length; i++) {
-        let bird = birds[i];
-        bird.x += bird.birdSpeed;
-
-        if (bird.x > 1.1) bird.x = -1.1;
-        if (bird.x < -1.1) bird.x = 1.1;
-
-        var birdVertices = [
-            vec2(bird.x - 0.05, bird.y - 0.03),
-            vec2(bird.x - 0.05, bird.y + 0.03),
-            vec2(bird.x + 0.05, bird.y + 0.03),
-            vec2(bird.x + 0.05, bird.y - 0.03)
-        ];
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, birdBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, i * 8 * Float32Array.BYTES_PER_ELEMENT, flatten(birdVertices));
-    }
-
-    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
-    for (let i = 0; i < birds.length; i++) {
-        gl.drawArrays(gl.TRIANGLE_FAN, i * 4, 4);
-    }
 }
 
 // Rendera inn allt
