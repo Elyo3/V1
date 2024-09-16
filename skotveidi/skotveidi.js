@@ -4,7 +4,7 @@ var renderId;
 
 var mouseX;               // Old value of x-coordinate  
 var movement = false;     // Do we move the paddle?
-var mouseBuffer;
+var gunBuffer;
 var birdBuffer;
 var shotBuffer;
 var vPosition;
@@ -29,7 +29,7 @@ window.onload = function init() {
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
-    var mouseVertices = [
+    var gunVertices = [
         vec2(-0.1, -0.95),  // Bottom left
         vec2(0.0, -0.8),   // Top center
         vec2(0.1, -0.95)    // Bottom right 
@@ -39,15 +39,15 @@ window.onload = function init() {
     gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
     
-    var emptyBirdVertices = new Float32Array(birdNum * 10);
+    var emptyBirdsVertices = new Float32Array(birdNum * 10);
 
-    mouseBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, mouseBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(mouseVertices), gl.DYNAMIC_DRAW);
+    gunBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, gunBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(gunVertices), gl.DYNAMIC_DRAW);
 
     birdBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, birdBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, emptyBirdVertices, gl.DYNAMIC_DRAW); // Tómur buffer fyrir fuglana
+    gl.bufferData(gl.ARRAY_BUFFER, emptyBirdsVertices, gl.DYNAMIC_DRAW); // Tómur buffer fyrir fuglana
 
     shotBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, shotBuffer);
@@ -73,15 +73,15 @@ window.onload = function init() {
             var xmove = 2 * (e.offsetX - mouseX) / canvas.width;
             mouseX = e.offsetX;
     
-            var newLeft = mouseVertices[0][0] + xmove;
-            var newRight = mouseVertices[2][0] + xmove;
+            var newLeft = gunVertices[0][0] + xmove;
+            var newRight = gunVertices[2][0] + xmove;
     
             if (newLeft >= -1 && newRight <= 1) { 
                 for (let i = 0; i < 3; i++) {
-                    mouseVertices[i][0] += xmove;
+                    gunVertices[i][0] += xmove;
                 }
-                gl.bindBuffer(gl.ARRAY_BUFFER, mouseBuffer);
-                gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(mouseVertices));
+                gl.bindBuffer(gl.ARRAY_BUFFER, gunBuffer);
+                gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(gunVertices));
             }
         }
     });
@@ -99,14 +99,14 @@ window.onload = function init() {
         }
     });
 
-    birds = generateBirds(birdNum);
+    birds = createBirds(birdNum);
     render();
 
     // Skjóta
     function shoot() {
     if (shot.length < 3) {
         shot.push({
-            x: mouseVertices[1][0],
+            x: gunVertices[1][0],
             y: -1,
             birdSpeed: 0.05
         });
@@ -115,7 +115,7 @@ window.onload = function init() {
 }
 
 // Býr til fugla og stillir hraða og staðsetningu
-function generateBirds(count) {
+function createBirds(count) {
     let newBirds = [];
     for (let i = 0; i < count; i++) {
         newBirds.push({
@@ -128,7 +128,7 @@ function generateBirds(count) {
 }
 
 // Setur inn collision fyrir shot og fuglana
-function checkForCollisions() {
+function collisions() {
     for (let i = 0; i < shot.length; i++) {
         let bullet = shot[i];
         for (let j = 0; j < birds.length; j++) {
@@ -189,13 +189,8 @@ function endGame() {
     document.body.appendChild(button);
 
     button.addEventListener('click', function() {
-        startGame()
+        location.reload();
     })
-}
-
-// Endurhlaðar gluggan
-function startGame() {
-    location.reload();
 }
 
 // Teiknar skotin
@@ -226,7 +221,7 @@ function drawBullets() {
 
 //Teiknar byssuna
 function drawGun() {
-    gl.bindBuffer(gl.ARRAY_BUFFER, mouseBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gunBuffer);
     gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
@@ -263,7 +258,7 @@ function render() {
     drawGun();
     drawBirds();
     drawBullets();
-    checkForCollisions();
+    collisions();
     
     setTimeout(function () {
         renderId = requestAnimationFrame(render);
