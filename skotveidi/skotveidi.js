@@ -4,17 +4,17 @@ var renderId;
 
 var mouseX;               // Old value of x-coordinate  
 var movement = false;     // Do we move the paddle?
-var mouseBufferId;
-var birdBufferId;
-var skotBufferId;
+var mouseBuffer;
+var birdBuffer;
+var shotBuffer;
 var vPosition;
-var speed = Math.random()-1;
+var birdSpeed = Math.random()-1;
 
-let stig = "";
+let birdStig = "";
 let birdCounter = 0;
-var skot = [];
+var shot = [];
 var birds = [];
-var numBirds = 5;
+var birdNum = 5;
 
 
 window.onload = function init() {
@@ -39,19 +39,19 @@ window.onload = function init() {
     gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
     
-    var emptyBirdVertices = new Float32Array(numBirds * 10);
+    var emptyBirdVertices = new Float32Array(birdNum * 10);
 
-    mouseBufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, mouseBufferId);
+    mouseBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, mouseBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(mouseVertices), gl.DYNAMIC_DRAW);
 
-    birdBufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, birdBufferId);
+    birdBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, birdBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, emptyBirdVertices, gl.DYNAMIC_DRAW); // Tómur buffer fyrir fuglana
 
-    skotBufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, skotBufferId);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(8), gl.DYNAMIC_DRAW); // Tómur buffer fyrir skot
+    shotBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, shotBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(8), gl.DYNAMIC_DRAW); // Tómur buffer fyrir shot
 
 
     // Event listeners fyrir mús
@@ -80,7 +80,7 @@ window.onload = function init() {
                 for (let i = 0; i < 3; i++) {
                     mouseVertices[i][0] += xmove;
                 }
-                gl.bindBuffer(gl.ARRAY_BUFFER, mouseBufferId);
+                gl.bindBuffer(gl.ARRAY_BUFFER, mouseBuffer);
                 gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(mouseVertices));
             }
         }
@@ -99,16 +99,16 @@ window.onload = function init() {
         }
     });
 
-    birds = generateBirds(numBirds);
+    birds = generateBirds(birdNum);
     render();
 
     // Skjóta
     function shoot() {
-    if (skot.length < 3) {
-        skot.push({
+    if (shot.length < 3) {
+        shot.push({
             x: mouseVertices[1][0],
             y: -1,
-            speed: 0.05
+            birdSpeed: 0.05
         });
         }
     };
@@ -121,23 +121,23 @@ function generateBirds(count) {
         newBirds.push({
             x: Math.random() * 2 - 1,  
             y: Math.random() * 0.8 + 0.1, 
-            speed: (Math.random() * 0.01 + 0.01) * (Math.random() > 0.3 ? 1 : -1) 
+            birdSpeed: (Math.random() * 0.01 + 0.01) * (Math.random() > 0.3 ? 1 : -1) 
         });
     }
     return newBirds;
 }
 
-// Setur inn collision fyrir skot og fuglana
+// Setur inn collision fyrir shot og fuglana
 function checkForCollisions() {
-    for (let i = 0; i < skot.length; i++) {
-        let shot = skot[i];
+    for (let i = 0; i < shot.length; i++) {
+        let bullet = shot[i];
         for (let j = 0; j < birds.length; j++) {
             let bird = birds[j];
 
-            let shotLeft = shot.x - 0.01;
-            let shotRight = shot.x + 0.01;
-            let shotBottom = shot.y;
-            let shotTop = shot.y + 0.1;
+            let bulletLeft = bullet.x - 0.01;
+            let bulletRight = bullet.x + 0.01;
+            let bulletBottom = bullet.y;
+            let bulletTop = bullet.y + 0.1;
 
             let birdLeft = bird.x - 0.03;
             let birdRight = bird.x + 0.03;
@@ -145,20 +145,20 @@ function checkForCollisions() {
             let birdTop = bird.y + 0.05;
 
             if (
-                shotRight > birdLeft &&
-                shotLeft < birdRight &&
-                shotTop > birdBottom &&
-                shotBottom < birdTop
+                bulletRight > birdLeft &&
+                bulletLeft < birdRight &&
+                bulletTop > birdBottom &&
+                bulletBottom < birdTop
             ) {
-                skot.splice(i, 1);
+                shot.splice(i, 1);
                 birds.splice(j, 1);
                 console.log("bird hit")
 
-                stig+= " 🐦 ";
+                birdStig+= " 🐦 ";
                 birdCounter++;
-                document.getElementById("stig").innerText = `bird: ${stig}`;
+                document.getElementById("birdStig").innerText = `bird: ${birdStig}`;
 
-                if (birdCounter >= numBirds) {
+                if (birdCounter >= birdNum) {
                     endGame();
                     return;
                 }
@@ -174,7 +174,7 @@ function endGame() {
     cancelAnimationFrame(renderId);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    const message = `Game over! \n \n You shot ${numBirds} birds`;
+    const message = `Game over! \n \n You shot ${birdNum} birds`;
     console.log(message);
 
     const gameOver = document.createElement('div');
@@ -202,7 +202,7 @@ function startGame() {
 function drawBird() {
     for (let i = 0; i < birds.length; i++) {
         let bird = birds[i];
-        bird.x += bird.speed;
+        bird.x += bird.birdSpeed;
         
         if (bird.x > 1.1) bird.x = -1.1;
         if (bird.x < -1.1) bird.x = 1.1;
@@ -214,7 +214,7 @@ function drawBird() {
             vec2(bird.x + 0.05, bird.y - 0.03)    
         ];
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, birdBufferId);
+        gl.bindBuffer(gl.ARRAY_BUFFER, birdBuffer);
         gl.bufferSubData(gl.ARRAY_BUFFER, i * 8 * Float32Array.BYTES_PER_ELEMENT, flatten(birdVertices));
     };
 
@@ -226,31 +226,31 @@ function drawBird() {
 
 //Teiknar byssuna
 function drawGun() {
-    gl.bindBuffer(gl.ARRAY_BUFFER, mouseBufferId);
+    gl.bindBuffer(gl.ARRAY_BUFFER, mouseBuffer);
     gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
-// Teiknar skotin
+// Teiknar shotin
 function drawShots() {
-    for (let i = 0; i < skot.length; i++) {
-        let shot = skot[i];
-        shot.y += shot.speed;
-        if (shot.y > 1.0) {
-            skot.splice(i, 1);
+    for (let i = 0; i < shot.length; i++) {
+        let bullet = shot[i];
+        bullet.y += bullet.birdSpeed;
+        if (bullet.y > 1.0) {
+            shot.splice(i, 1);
             i--;
             continue;
         }
         
-        var skotVertices = [
-            vec2(shot.x - 0.005, shot.y ),
-            vec2(shot.x - 0.005, shot.y + 0.05),
-            vec2(shot.x + 0.005, shot.y + 0.05),
-            vec2(shot.x + 0.005, shot.y)
+        var shotVertices = [
+            vec2(bullet.x - 0.005, bullet.y ),
+            vec2(bullet.x - 0.005, bullet.y + 0.05),
+            vec2(bullet.x + 0.005, bullet.y + 0.05),
+            vec2(bullet.x + 0.005, bullet.y)
         ];
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, skotBufferId);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(skotVertices));
+        gl.bindBuffer(gl.ARRAY_BUFFER, shotBuffer);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(shotVertices));
         gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
         gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
         console.log("bang")
@@ -268,5 +268,5 @@ function render() {
     
     setTimeout(function () {
         renderId = requestAnimationFrame(render);
-    }, speed);
+    }, birdSpeed);
 }
