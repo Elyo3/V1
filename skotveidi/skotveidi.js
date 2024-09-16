@@ -198,41 +198,8 @@ function startGame() {
     location.reload();
 }
 
-// Teiknar fuglana
-function drawBird() {
-    for (let i = 0; i < birds.length; i++) {
-        let bird = birds[i];
-        bird.x += bird.birdSpeed;
-        
-        if (bird.x > 1.1) bird.x = -1.1;
-        if (bird.x < -1.1) bird.x = 1.1;
-
-        var birdVertices = [
-            vec2(bird.x - 0.05, bird.y - 0.03),   
-            vec2(bird.x - 0.05, bird.y + 0.03), 
-            vec2(bird.x + 0.05, bird.y + 0.03),  
-            vec2(bird.x + 0.05, bird.y - 0.03)    
-        ];
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, birdBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, i * 8 * Float32Array.BYTES_PER_ELEMENT, flatten(birdVertices));
-    };
-
-    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
-    for (let i = 0; i < birds.length; i++) {
-        gl.drawArrays(gl.TRIANGLE_FAN, i * 4, 4); 
-    }
-}
-
-//Teiknar byssuna
-function drawGun() {
-    gl.bindBuffer(gl.ARRAY_BUFFER, mouseBuffer);
-    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-}
-
-// Teiknar shotin
-function drawShots() {
+// Teiknar skotin
+function drawBullets() {
     for (let i = 0; i < shot.length; i++) {
         let bullet = shot[i];
         bullet.y += bullet.birdSpeed;
@@ -257,13 +224,45 @@ function drawShots() {
     };
 }
 
+//Teiknar byssuna
+function drawGun() {
+    gl.bindBuffer(gl.ARRAY_BUFFER, mouseBuffer);
+    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// Teiknar fuglana
+function drawBirds() {
+    for (let i = 0; i < birds.length; i++) {
+        let bird = birds[i];
+        bird.x += bird.birdSpeed;
+        
+        if (bird.x > 1.1) bird.x = -1.1;
+        if (bird.x < -1.1) bird.x = 1.1;
+
+        var birdVertices = [
+            vec2(bird.x - 0.05, bird.y - 0.03),   
+            vec2(bird.x - 0.05, bird.y + 0.03), 
+            vec2(bird.x + 0.05, bird.y + 0.03),  
+            vec2(bird.x + 0.05, bird.y - 0.03)    
+        ];
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, birdBuffer);
+        gl.bufferSubData(gl.ARRAY_BUFFER, i * 8 * Float32Array.BYTES_PER_ELEMENT, flatten(birdVertices));
+    };
+
+    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
+    for (let i = 0; i < birds.length; i++) {
+        gl.drawArrays(gl.TRIANGLE_FAN, i * 4, 4); 
+    }
+}
 // Renderar inn allt
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     drawGun();
-    drawBird();
-    drawShots();
+    drawBirds();
+    drawBullets();
     checkForCollisions();
     
     setTimeout(function () {
